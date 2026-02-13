@@ -182,3 +182,8 @@ For questions or suggestions, please open an issue on GitHub.
 ---
 
 **Note**: The `data/` directory is excluded from version control due to size. Use `download_datasets.py` to acquire the necessary datasets.
+## Metrics:
+Version 1 dt 02/12/2025
+MAE : 0.85
+RMSE: 2.34
+MAPE : 58.02

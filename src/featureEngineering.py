@@ -20,7 +20,7 @@ def load_preprocessed_data():
     return processed_data
 
 
-def create_lag_features(df, lags=[1, 7, 14, 28, 30]):
+def create_lag_features(df, lags=[7, 14, 21, 28, 30]):
     print("Creating lag features...")
 
     df = df.sort_values(['item_id', 'store_id', 'date']).reset_index(drop=True)
@@ -36,7 +36,7 @@ def create_rolling_features(df):
     print("Creating rolling features with mean and standard deviation...")
 
     grouped = df.groupby(['item_id', 'store_id'])['sales'].shift(1)
-    for w in [7, 14, 28, 30]:
+    for w in [7, 14, 21, 28, 30]:
         df[f'sales_rolling_{w}_mean'] = (
             grouped
             .rolling(w)
@@ -56,7 +56,7 @@ def create_price_change_features(df):
     df = df.sort_values(['item_id', 'store_id', 'date'])
     grouped = df.groupby(['item_id', 'store_id'])['sell_price'].shift(1)
 
-    for lag in [1, 7, 14, 28, 30]:
+    for lag in [7, 14, 21, 28, 30]:
         df[f"price_lag_{lag}"] = df.groupby(['item_id', 'store_id'])['sell_price'].shift(lag)
         df[f"price_return_{lag}"] = df['sell_price'] / df[f'price_lag_{lag}'] - 1
         df[f"price_rolling_{lag}_mean"] = grouped.rolling(lag).mean()

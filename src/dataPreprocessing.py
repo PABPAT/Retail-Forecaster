@@ -85,7 +85,7 @@ def handle_missing_values(df):
 
         # Forward/backward fill within each item-store combination
         df['sell_price'] = df.groupby(['item_id', 'store_id'])['sell_price'].transform(
-            lambda x: x.fillna(method='ffill').fillna(method='bfill')
+            lambda x: x.ffill().bfill()
         )
 
         # Fill remaining with item median
@@ -149,7 +149,7 @@ def create_time_features(df):
     return df
 
 
-def create_lag_features(df, lags=[7, 14, 21, 28]):
+def create_lag_features(df, lags=[7, 14, 21, 28, 30]):
     """
     Create lag features for time series forecasting.
     Essential for capturing trends and seasonality.
@@ -165,7 +165,7 @@ def create_lag_features(df, lags=[7, 14, 21, 28]):
     return df
 
 
-def create_rolling_features(df, windows=[7, 14, 28]):
+def create_rolling_features(df, windows=[7, 14, 21, 28, 30]):
     """
     Create rolling statistics.
     Captures recent trends better than simple lags.
@@ -206,18 +206,22 @@ def create_price_features(df):
     return df
 
 
-def sample_data_smart(df, n_items=500):
-    """
-    Smart sampling: Keep complete time series for selected items.
-    Better than random sampling for forecasting.
-    """
-    print(f"\nSmart sampling: {n_items} random item-store combinations...")
+def sample_data_smart(df, sample_pct=0.40):
 
-    # Get all unique item-store combinations
+    print(f"\nSmart sampling: {sample_pct * 100:.0f}% of item-store combinations...")
+
+    # Get all unique item-store combinations FIRST
     unique_combos = df[['item_id', 'store_id']].drop_duplicates()
+    total_combos = len(unique_combos)
+
+    # NOW calculate n_items
+    n_items = int(total_combos * sample_pct)
+
+    print(f"Total combinations: {total_combos:,}")
+    print(f"Sampling: {n_items:,} combinations ({sample_pct * 100:.0f}%)")
 
     # Sample combinations
-    sampled_combos = unique_combos.sample(n=min(n_items, len(unique_combos)), random_state=42)
+    sampled_combos = unique_combos.sample(n=n_items, random_state=42)
 
     # Filter data to keep only sampled combinations
     df_sample = df.merge(sampled_combos, on=['item_id', 'store_id'], how='inner')
@@ -235,31 +239,48 @@ def reduce_memory_usage(df):
     """Optimize memory usage by downcasting numeric types."""
     print("\nOptimizing memory usage...")
 
-    start_mem = df.memory_usage().sum() / 1024**2
+    start_mem = df.memory_usage().sum() / 1024 ** 2
 
     for col in df.columns:
         col_type = df[col].dtype
 
-        if col_type != object and col_type.name != 'category':
-            c_min = df[col].min()
-            c_max = df[col].max()
+        # Skip non-numeric types
+        if pd.api.types.is_datetime64_any_dtype(df[col]):
+            continue
+        if pd.api.types.is_object_dtype(df[col]):
+            continue
+        if pd.api.types.is_categorical_dtype(df[col]):
+            continue
 
-            if str(col_type)[:3] == 'int':
-                if c_min > np.iinfo(np.int8).min and c_max < np.iinfo(np.int8).max:
-                    df[col] = df[col].astype(np.int8)
-                elif c_min > np.iinfo(np.int16).min and c_max < np.iinfo(np.int16).max:
-                    df[col] = df[col].astype(np.int16)
-                elif c_min > np.iinfo(np.int32).min and c_max < np.iinfo(np.int32).max:
-                    df[col] = df[col].astype(np.int32)
+        # Skip if not numeric
+        if not pd.api.types.is_numeric_dtype(df[col]):
+            continue
+
+        c_min = df[col].min()
+        c_max = df[col].max()
+
+        # Handle integer types
+        if pd.api.types.is_integer_dtype(df[col]):
+            if c_min > np.iinfo(np.int8).min and c_max < np.iinfo(np.int8).max:
+                df[col] = df[col].astype(np.int8)
+            elif c_min > np.iinfo(np.int16).min and c_max < np.iinfo(np.int16).max:
+                df[col] = df[col].astype(np.int16)
+            elif c_min > np.iinfo(np.int32).min and c_max < np.iinfo(np.int32).max:
+                df[col] = df[col].astype(np.int32)
+            elif c_min > np.iinfo(np.int64).min and c_max < np.iinfo(np.int64).max:
+                df[col] = df[col].astype(np.int64)
+        # Handle float types
+        else:
+            if c_min > np.finfo(np.float16).min and c_max < np.finfo(np.float16).max:
+                df[col] = df[col].astype(np.float32)
             else:
-                if c_min > np.finfo(np.float16).min and c_max < np.finfo(np.float16).max:
-                    df[col] = df[col].astype(np.float32)
+                df[col] = df[col].astype(np.float64)
 
-    end_mem = df.memory_usage().sum() / 1024**2
-    print(f'Memory usage: {start_mem:.2f} MB -> {end_mem:.2f} MB ({100 * (start_mem - end_mem) / start_mem:.1f}% reduction)')
+    end_mem = df.memory_usage().sum() / 1024 ** 2
+    print(
+        f'Memory usage: {start_mem:.2f} MB -> {end_mem:.2f} MB ({100 * (start_mem - end_mem) / start_mem:.1f}% reduction)')
 
     return df
-
 
 def main():
     """Main data preparation pipeline."""
@@ -283,11 +304,11 @@ def main():
     df = create_time_features(df)
 
     # Sample BEFORE creating lags (to avoid memory issues)
-    df_sample = sample_data_smart(df, n_items=500)
+    df_sample = sample_data_smart(df, sample_pct=0.40)
 
     # Create lag and rolling features
-    df_sample = create_lag_features(df_sample, lags=[7, 14, 21, 28])
-    df_sample = create_rolling_features(df_sample, windows=[7, 14, 28])
+    df_sample = create_lag_features(df_sample, lags=[7, 14, 21, 28, 30])
+    df_sample = create_rolling_features(df_sample, windows=[7, 14, 21, 28, 30])
     df_sample = create_price_features(df_sample)
 
     # Final data quality check
@@ -317,7 +338,6 @@ def main():
 
     print("\nData preparation complete!")
     print("Ready for modeling!")
-
 
 if __name__ == "__main__":
     main()
