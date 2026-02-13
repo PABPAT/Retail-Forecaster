@@ -1,199 +1,184 @@
-# Retail Sales Forecasting - Dataset Download Package
+# Retail Forecaster
 
-## 🎯 Quick Start
+A machine learning solution for retail inventory optimization using historical sales data and advanced forecasting techniques.
 
-This package helps you download datasets for building a predictive model to forecast retail product sales for the next 3 months.
+## Overview
 
-### Option 1: Automated Download (Recommended)
+This project implements predictive models to optimize inventory levels for retail operations. By analyzing historical sales patterns, seasonality, and trends, the model helps reduce stockouts while minimizing excess inventory costs.
 
+## Features
+
+- **Automated Data Pipeline**: Download and preprocess retail datasets
+- **Feature Engineering**: Extract temporal patterns, trends, and seasonal components
+- **Multiple Model Support**: Leverages scikit-learn and XGBoost/LightGBM for robust predictions
+- **Inventory Optimization**: Translate forecasts into actionable inventory recommendations
+
+## Project Structure
+
+```
+Retail-Forecaster/
+├── main.py                      # Main execution script
+├── download_datasets.py         # Dataset acquisition utilities
+├── explore_data.py             # Exploratory data analysis
+├── test_setup.py               # Environment validation
+├── requirements.txt            # Python dependencies
+├── src/
+│   ├── dataPreprocessing.py    # Data cleaning and preprocessing
+│   ├── featureEngineering.py   # Feature extraction and transformation
+│   └── train_model.py          # Model training and evaluation
+└── data/                       # Data directory (not tracked in git)
+```
+
+## Installation
+
+### Prerequisites
+- Python 3.8 or higher
+- pip package manager
+
+### Setup
+
+1. Clone the repository:
 ```bash
-# Make the script executable
-chmod +x download_datasets.py
+git clone https://github.com/PABPAT/Retail-Forecaster.git
+cd Retail-Forecaster
+```
 
-# Run the download script
+2. Create a virtual environment (recommended):
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+4. Verify installation:
+```bash
+python test_setup.py
+```
+
+## Data Sources & Preprocessing
+
+### Data Acquisition
+The model uses retail transaction data containing:
+- Historical sales records
+- Product information
+- Timestamps and seasonal indicators
+- Store/location data
+
+Run the data download script:
+```bash
 python download_datasets.py
-
-# Or specify output directory
-python download_datasets.py --output ./my_data
-
-# Or download specific dataset
-python download_datasets.py --dataset demand
 ```
 
-### Option 2: Manual Download
+### Preprocessing Steps
+The data preprocessing pipeline (`src/dataPreprocessing.py`) handles:
+- Missing value imputation
+- Outlier detection and treatment
+- Data type conversions
+- Date/time parsing
+- Data validation and quality checks
 
-Follow the detailed instructions in `retail_data_download_guide.md`
+### Feature Engineering
+The feature engineering module (`src/featureEngineering.py`) creates:
+- **Temporal Features**: Day of week, month, quarter, holidays
+- **Lag Features**: Historical sales at various time windows
+- **Rolling Statistics**: Moving averages and standard deviations
+- **Trend Components**: Long-term growth patterns
+- **Seasonal Decomposition**: Cyclical patterns and seasonality indices
 
----
+## How to Run
 
-## 📦 Available Datasets
-
-| Dataset | Size | Best For | Difficulty |
-|---------|------|----------|------------|
-| **Store Item Demand** | ~5MB | 3-month forecasting | ⭐ Beginner |
-| **M5 Walmart** | ~100MB | Production models | ⭐⭐⭐ Advanced |
-| **UCI Online Retail** | ~23MB | E-commerce analysis | ⭐⭐ Intermediate |
-| **Online Retail II** | ~45MB | Extended e-commerce | ⭐⭐ Intermediate |
-
----
-
-## 🔧 Prerequisites
-
-### 1. Install Python packages
+### 1. Explore the Data
 ```bash
-pip install kaggle pandas ucimlrepo
+python explore_data.py
 ```
+Generates visualizations and statistics about the dataset.
 
-### 2. Set up Kaggle API (for Kaggle datasets)
-
-1. Go to: https://www.kaggle.com/account
-2. Click "Create New API Token"
-3. Move `kaggle.json` to:
-   - **Linux/Mac:** `~/.kaggle/kaggle.json`
-   - **Windows:** `C:\Users\<username>\.kaggle\kaggle.json`
-4. Set permissions (Linux/Mac only):
-   ```bash
-   chmod 600 ~/.kaggle/kaggle.json
-   ```
-
----
-
-## 📚 What's Included
-
-1. **download_datasets.py** - Automated download script
-2. **retail_data_download_guide.md** - Comprehensive guide with details
-3. **README.md** - This file
-
----
-
-## 💡 Recommended Workflow
-
-### For Beginners:
+### 2. Train the Model
 ```bash
-# Download the simplest dataset
-python download_datasets.py --dataset demand
-
-# Start exploring
-python
->>> import pandas as pd
->>> df = pd.read_csv('retail_datasets/train.csv')
->>> df.head()
+python main.py
 ```
+This will:
+- Load and preprocess the data
+- Engineer features
+- Train multiple models (scikit-learn, XGBoost/LightGBM)
+- Evaluate performance
+- Generate inventory recommendations
 
-### For Advanced Users:
-```bash
-# Download all datasets
-python download_datasets.py
+### 3. Custom Configuration
+Modify parameters in `main.py` or create a config file for:
+- Model hyperparameters
+- Feature selection
+- Training/validation split ratios
+- Inventory optimization constraints
 
-# Compare models on different datasets
-# Build ensemble models
-# Deploy to production
-```
+## Technical Details & Architecture
 
----
+### Machine Learning Pipeline
 
-## 🚀 Next Steps After Download
+1. **Data Ingestion**: Raw retail transaction data
+2. **Preprocessing**: Cleaning, validation, and transformation
+3. **Feature Engineering**: Time-series and domain-specific features
+4. **Model Training**: Ensemble approach using:
+   - scikit-learn (Random Forest, Gradient Boosting)
+   - XGBoost/LightGBM (Gradient boosting variants)
+5. **Model Evaluation**: Cross-validation and time-series specific metrics
+6. **Inventory Optimization**: Convert predictions to stock recommendations
 
-1. **Load the data:**
-   ```python
-   import pandas as pd
-   df = pd.read_csv('retail_datasets/train.csv')
-   ```
+### Models Used
 
-2. **Explore the structure:**
-   ```python
-   print(df.head())
-   print(df.info())
-   print(df.describe())
-   ```
+- **scikit-learn**: Baseline models and ensemble methods
+- **XGBoost**: High-performance gradient boosting for structured data
+- **LightGBM**: Fast, distributed gradient boosting framework
 
-3. **Start modeling:**
-   - Build baseline model (moving average)
-   - Feature engineering (lags, rolling stats)
-   - Train ML models (XGBoost, LightGBM)
-   - Evaluate performance (RMSE, MAE)
+### Evaluation Metrics
 
----
+- Mean Absolute Error (MAE)
+- Root Mean Squared Error (RMSE)
+- Mean Absolute Percentage Error (MAPE)
+- Custom inventory metrics (stockout rate, holding costs)
 
-## 📊 Dataset Details
+## Results
 
-### Store Item Demand Forecasting
-- **Purpose:** Predict 3 months of sales
-- **Columns:** date, store, item, sales
-- **Time Range:** 5 years
-- **Stores:** 10
-- **Items:** 50
+The model outputs:
+- Sales forecasts for specified time horizons
+- Recommended inventory levels by product/location
+- Confidence intervals for predictions
+- Feature importance rankings
 
-### M5 Walmart Forecasting
-- **Purpose:** Hierarchical sales forecasting
-- **Products:** 3,049
-- **Categories:** Hobbies, Foods, Household
-- **Features:** Sales, prices, calendar, events
-- **Time Range:** 2011-2016 (5.4 years)
+## Dependencies
 
-### UCI Online Retail
-- **Purpose:** E-commerce transaction analysis
-- **Transactions:** 541,909
-- **Columns:** InvoiceNo, StockCode, Description, Quantity, InvoiceDate, UnitPrice, CustomerID, Country
-- **Time Range:** Dec 2010 - Dec 2011
+Key libraries (see `requirements.txt` for full list):
+- pandas
+- numpy
+- scikit-learn
+- xgboost
+- lightgbm
+- matplotlib/seaborn (for visualization)
 
----
+## Future Improvements
 
-## ❓ Troubleshooting
+- [ ] Add real-time prediction API
+- [ ] Implement deep learning models (LSTM, Transformer)
+- [ ] Multi-location inventory optimization
+- [ ] Incorporate external factors (weather, promotions)
+- [ ] Dashboard for visualization and monitoring
 
-### "Kaggle credentials not found"
-→ Set up Kaggle API credentials (see Prerequisites)
+## Contributing
 
-### "Permission denied"
-→ Run: `chmod 600 ~/.kaggle/kaggle.json`
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-### "Command not found: unzip"
-→ Install unzip:
-- **Ubuntu/Debian:** `sudo apt-get install unzip`
-- **Mac:** `brew install unzip`
-- **Windows:** Install 7-Zip or use PowerShell
+## License
 
-### "Module not found"
-→ Install required packages:
-```bash
-pip install kaggle pandas ucimlrepo
-```
+This project is available for educational and research purposes.
+
+## Contact
+
+For questions or suggestions, please open an issue on GitHub.
 
 ---
 
-## 🎓 Learning Resources
-
-- **Kaggle Learn:** https://www.kaggle.com/learn/time-series
-- **Dataset Documentation:**
-  - Store Item Demand: https://www.kaggle.com/c/demand-forecasting-kernels-only
-  - M5 Walmart: https://www.kaggle.com/c/m5-forecasting-accuracy
-  - UCI Online Retail: https://archive.ics.uci.edu/dataset/352/online+retail
-
----
-
-## 📧 Need Help?
-
-If you encounter issues:
-1. Check the detailed guide: `retail_data_download_guide.md`
-2. Verify all prerequisites are met
-3. Check internet connection
-4. Ensure sufficient disk space
-
----
-
-## ✅ Quick Verification
-
-After download, verify files exist:
-```bash
-ls -lh retail_datasets/
-```
-
-You should see:
-- `train.csv` (Store Item Demand)
-- `sales_train_evaluation.csv` (M5 Walmart)
-- `uci_online_retail.csv` (UCI)
-- And more...
-
----
-
-**Happy Forecasting! 🚀**
+**Note**: The `data/` directory is excluded from version control due to size. Use `download_datasets.py` to acquire the necessary datasets.
